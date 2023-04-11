@@ -1,0 +1,69 @@
+import time
+
+class Customer:
+    def __init__(self, name, is_regular):
+        self.name = name
+        self.is_regular = is_regular
+        self.start_time = 0
+        self.end_time = 0 
+
+class CustomerQueue:
+    def __init__(self):
+        self.customers = []    
+    def add_customer(self, customer):
+        self.customers.append(customer)      
+    def get_next_customer(self):
+        if len(self.customers) == 0:
+            return None
+        else:
+            next_customer = min(self.customers, key=lambda c: c.start_time)
+            self.customers.remove(next_customer)
+            return next_customer
+
+class QueryHandler:
+    def __init__(self):
+        self.regular_queue = CustomerQueue()
+        self.new_queue = CustomerQueue()
+    def add_customer(self, name, is_regular):
+        customer = Customer(name, is_regular)
+        if is_regular:
+            self.regular_queue.add_customer(customer)
+        else:
+            self.new_queue.add_customer(customer)
+    def handle_queries(self):
+        start_time = time.time()
+        while time.localtime().tm_hour < 13:
+            next_customer = None
+            if len(self.regular_queue.customers) > 0:
+                next_customer = self.regular_queue.get_next_customer()
+                query_time = 10
+            elif len(self.new_queue.customers) > 0:
+                next_customer = self.new_queue.get_next_customer()
+                query_time = 5
+            if next_customer is not None:
+                next_customer.start_time = time.time()
+                print(f"Handling query from {next_customer.name}...")
+                time.sleep(query_time)
+                next_customer.end_time = time.time()
+                print(f"Finished query from {next_customer.name}.")
+        end_time = time.time()
+        return end_time - start_time
+    def get_average_query_time(self):
+        total_query_time = 0
+        total_queries = 0
+        for queue in [self.regular_queue, self.new_queue]:
+            for customer in queue.customers:
+                if customer.end_time > 0:
+                    total_query_time += customer.end_time - customer.start_time
+                    total_queries += 1
+        return total_query_time / total_queries if total_queries > 0 else 0
+		
+handler = QueryHandler()
+handler.add_customer("Vansh", True)
+handler.add_customer("Pratap", False)
+handler.add_customer("Chauhan", True)
+total_time = handler.handle_queries()
+avg_query_time = handler.get_average_query_time()
+
+print(f"Total time spent on handling queries: {total_time:.2f} seconds")
+print(f"Average query time: {avg_query_time:.2f} seconds")
